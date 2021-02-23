@@ -1,0 +1,1103 @@
+# Default values for aliyun-exporter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: fengxsong/aliyun-exporter
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: v0.1.0
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# runtime config
+logFormat: json
+logLevel: info
+rpsLimit: 64
+
+config:
+  accessKey: xxxxxxxx
+  accessKeySecret: xxxxxxxx
+  instanceInfos:
+    - es
+    - rds
+    - redis
+    - slb
+  metrics:
+    acs_elasticsearch:
+      - desc: -1:没有快照 0:成功 1:进行中 2:失败
+        dimensions:
+          - userId
+          - clusterId
+        measure: Maximum
+        name: ClusterAutoSnapshotLatestStatus
+        period: 60
+        unit: value
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+        measure: Average
+        name: ClusterIndexQPS
+        period: 60
+        unit: Count/Second
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+        measure: Average
+        name: ClusterQueryQPS
+        period: 60
+        unit: Count/Second
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+        measure: Value
+        name: ClusterStatus
+        period: 60
+        unit: value
+      - desc: 节点CPU使用率
+        dimensions:
+          - userId
+          - instanceId
+          - nodeHost
+        measure: Maximum
+        name: LogstashCpuPercent
+        period: 60
+        unit: "%"
+      - desc: 节点磁盘使用率
+        dimensions:
+          - userId
+          - instanceId
+          - nodeHost
+        measure: Maximum
+        name: LogstashNodeDiskUsage
+        period: 60
+        unit: "%"
+      - desc: HeapMemory使用率
+        dimensions:
+          - userId
+          - instanceId
+          - nodeHost
+        measure: Maximum
+        name: LogstashNodeHeapMemory
+        period: 60
+        unit: "%"
+      - desc: 节点1分钟负载
+        dimensions:
+          - userId
+          - instanceId
+          - nodeHost
+        measure: Maximum
+        name: LogstashNodeLoad1m
+        period: 60
+        unit: value
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+          - nodeIP
+        measure: Average
+        name: NodeCPUUtilization
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+          - nodeIP
+        measure: Average
+        name: NodeDiskUtilization
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+          - nodeIP
+        measure: Average
+        name: NodeHeapMemoryUtilization
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+          - nodeIP
+        measure: Average
+        name: NodeLoad_1m
+        period: 60
+        unit: value
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+          - nodeIP
+        measure: Maximum
+        name: NodeStatsExceptionLogCount
+        period: 60
+        unit: Count
+      - desc: ""
+        dimensions:
+          - userId
+          - clusterId
+          - nodeIP
+        measure: Maximum
+        name: NodeStatsFullGcCollectionCount
+        period: 60
+        unit: Count
+      - desc: 节点网络流出包
+        dimensions:
+          - userId
+          - clusterId
+          - nodeIP
+        measure: Maximum
+        name: NodeStatsNetworkoutPackages
+        period: 60
+        unit: count
+    acs_kafka:
+      - desc: 实例的磁盘使用占比
+        dimensions:
+          - userId
+          - instanceId
+        measure: Maximum
+        name: instance_disk_capacity
+        period: 60
+        unit: "%"
+      - desc: 实例每分钟消息生产量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Value
+        name: instance_message_input
+        period: 60
+        unit: bytes/s
+      - desc: 实例每分钟消息消费量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Value
+        name: instance_message_output
+        period: 60
+        unit: bytes/s
+      - desc: consumer group的未消费的消息数目
+        dimensions:
+          - userId
+          - instanceId
+          - consumerGroup
+        measure: Value
+        name: message_accumulation
+        period: 60
+        unit: Count
+      - desc: consumer group针对一个topic的未消费的消息数目
+        dimensions:
+          - userId
+          - instanceId
+          - consumerGroup
+          - topic
+        measure: Value
+        name: message_accumulation_onetopic
+        period: 60
+        unit: Count
+      - desc: topic每分钟消息生产量
+        dimensions:
+          - userId
+          - instanceId
+          - topic
+        measure: Value
+        name: topic_message_input
+        period: 60
+        unit: bytes/s
+      - desc: topic每分钟消息消费量
+        dimensions:
+          - userId
+          - instanceId
+          - topic
+        measure: Value
+        name: topic_message_output
+        period: 60
+        unit: bytes/s
+    acs_kvstore:
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - direction
+        measure: Average
+        name: AvgLogSize
+        period: 10
+        unit: Bytes
+      - desc: 已用连接数百分比
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: ConnectionUsage
+        period: 60
+        unit: "%"
+      - desc: 已用CPU百分比
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: CpuUsage
+        period: 60
+        unit: "%"
+      - desc: 操作KVSTORE失败次数
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: FailedCount
+        period: 60
+        unit: Count/Second
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - direction
+        measure: Average
+        name: Flow
+        period: 10
+        unit: Bytes/s
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupConnectionUsage
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupCpuUsage
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupIntranetInRatio
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupIntranetOutRatio
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupMemoryUsage
+        period: 60
+        unit: "%"
+      - desc: 写入网络带宽
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: IntranetIn
+        period: 60
+        unit: Bytes/s
+      - desc: 写入网络带宽使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: IntranetInRatio
+        period: 60
+        unit: "%"
+      - desc: 读取网络带宽
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: IntranetOut
+        period: 60
+        unit: Bytes/s
+      - desc: 读取网络带宽使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: IntranetOutRatio
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - direction
+        measure: Average
+        name: MaxLogSize
+        period: 10
+        unit: Bytes
+      - desc: 已用容量百分比
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MemoryUsage
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - direction
+        measure: Average
+        name: Rt
+        period: 10
+        unit: ms
+      - desc: 平均响应时间
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingAvgRt
+        period: 60
+        unit: us
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingConnectionUsage
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingCpuUsage
+        period: 60
+        unit: "%"
+      - desc: 命中率
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingHitRate
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingIntranetIn
+        period: 60
+        unit: KByte/s
+      - desc: 流入带宽使用率
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingIntranetInRatio
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingIntranetOut
+        period: 60
+        unit: KByte/s
+      - desc: 流出带宽使用率
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingIntranetOutRatio
+        period: 60
+        unit: "%"
+      - desc: 缓存内 Key 数量
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingKeys
+        period: 60
+        unit: Count
+      - desc: 最大响应时间
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingMaxRt
+        period: 60
+        unit: us
+      - desc: 内存使用率
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingMemoryUsage
+        period: 60
+        unit: "%"
+      - desc: Proxy单个请求的平均字节数
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingProxyAvgRequestSize
+        period: 60
+        unit: Byte
+      - desc: Proxy单个响应的平均字节数
+        dimensions:
+          - userId
+          - instanceId
+          - nodeId
+        measure: Average
+        name: ShardingProxyAvgResponseSize
+        period: 60
+        unit: Byte
+    acs_rds_dashboard:
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - direction
+        measure: Average
+        name: AvgLogSize
+        period: 30
+        unit: Bytes
+      - desc: 连接数使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: ConnectionUsage
+        period: 60
+        unit: "%"
+      - desc: CPU使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: CpuUsage
+        period: 60
+        unit: "%"
+      - desc: 只读实例延迟
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: DataDelay
+        period: 60
+        unit: Second
+      - desc: 磁盘使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: DiskUsage
+        period: 60
+        unit: "%"
+      - desc: Docker容器CPU占用比例
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: DockerCpuUsage
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - direction
+        measure: Average
+        name: Flow
+        period: 30
+        unit: Bytes/s
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupCPUUtilization
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupConnectionUtilization
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupDiskUtilization
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - groupId
+        measure: Average
+        name: GroupIOPSUtilization
+        period: 60
+        unit: "%"
+      - desc: IOPS使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: IOPSUsage
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - direction
+        measure: Average
+        name: MaxLogSize
+        period: 30
+        unit: Bytes
+      - desc: 内存使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MemoryUsage
+        period: 60
+        unit: "%"
+      - desc: MySQL_ActiveSessions
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_ActiveSessions
+        period: 60
+        unit: count
+      - desc: MySQL每秒Delete量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_ComDelete
+        period: 60
+        unit: countSecond
+      - desc: MySQL每秒Insert量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_ComInsert
+        period: 60
+        unit: countSecond
+      - desc: MySQL每秒InsertSelect量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_ComInsertSelect
+        period: 60
+        unit: countSecond
+      - desc: MySQL每秒Replace量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_ComReplace
+        period: 60
+        unit: countSecond
+      - desc: MySQL每秒ReplaceSelect量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_ComReplaceSelect
+        period: 60
+        unit: countSecond
+      - desc: MySQL每秒Select量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_ComSelect
+        period: 60
+        unit: countSecond
+      - desc: MySQL每秒Update量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_ComUpdate
+        period: 60
+        unit: countSecond
+      - desc: MySQL_数据磁盘使用量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_DataDiskSize
+        period: 60
+        unit: Megabytes
+      - desc: MySQL_BP脏页百分率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_IbufDirtyRatio
+        period: 60
+        unit: "%"
+      - desc: MySQL_BP读命中率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_IbufReadHit
+        period: 60
+        unit: "%"
+      - desc: MySQL每秒逻辑读次数
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_IbufRequestR
+        period: 60
+        unit: countSecond
+      - desc: MySQL每秒逻辑写次数
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_IbufRequestW
+        period: 60
+        unit: countSecond
+      - desc: MySQL_BP利用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_IbufUseRatio
+        period: 60
+        unit: "%"
+      - desc: MySQL_InnoDB每秒读取数据量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_InnoDBDataRead
+        period: 60
+        unit: Kbyte
+      - desc: MySQL_InnoDB每秒写入数据量
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: MySQL_InnoDBDataWritten
+        period: 60
+        unit: Kbyte
+    acs_slb_dashboard:
+      - desc: 端口当前活跃连接数
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - protocol
+        measure: Average
+        name: ActiveConnection
+        period: 60,300
+        unit: Count
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - protocol
+        measure: Average
+        name: DropConnection
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - protocol
+        measure: Average
+        name: DropPacketRX
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - protocol
+        measure: Average
+        name: DropPacketTX
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - protocol
+        measure: Average
+        name: DropTrafficRX
+        period: 60
+        unit: bits/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - protocol
+        measure: Average
+        name: DropTrafficTX
+        period: 60
+        unit: bits/s
+      - desc: 后端健康ECS实例个数(规则)
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - vip
+          - domain
+          - url
+        measure: Average
+        name: HealthyServerCountWithRule
+        period: 60
+        unit: Count
+      - desc: 当前后端健康ECS实例个数
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - vip
+        measure: Average
+        name: HeathyServerCount
+        period: 60
+        unit: Count
+      - desc: 端口当前非活跃连接数
+        dimensions:
+          - userId
+          - instanceId
+          - port
+          - protocol
+        measure: Average
+        name: InactiveConnection
+        period: 60
+        unit: Count
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceActiveConnection
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceDropConnection
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceDropPacketRX
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceDropPacketTX
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceDropTrafficRX
+        period: 60
+        unit: bits/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceDropTrafficTX
+        period: 60
+        unit: bits/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceInactiveConnection
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceMaxConnection
+        period: 60
+        unit: Count/s
+      - desc: 最大连接数使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceMaxConnectionUtilization
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceNewConnection
+        period: 60
+        unit: Count/s
+      - desc: 新建连接数使用率
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceNewConnectionUtilization
+        period: 60
+        unit: "%"
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstancePacketRX
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstancePacketTX
+        period: 60
+        unit: Count/s
+      - desc: ""
+        dimensions:
+          - userId
+          - instanceId
+        measure: Average
+        name: InstanceQps
+        period: 60
+        unit: Count/s
+    waf:
+      - desc: 4XX占比
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: 4XX_ratio
+        period: 60,300
+        unit: " "
+      - desc: 5XX占比
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: 5XX_ratio
+        period: 60,300
+        unit: " "
+      - desc: 访问控制拦截量(5m)
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: acl_blocks_5m
+        period: 60,300
+        unit: count
+      - desc: 访问控制拦截占比(5m)
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: acl_rate_5m
+        period: 60,300
+        unit: " "
+      - desc: CC防护拦截量(5m)
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: cc_blocks_5m
+        period: 60,300
+        unit: count
+      - desc: CC防护拦截占比(5m)
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: cc_rate_5m
+        period: 60,300
+        unit: " "
+      - desc: 每秒查询率
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: qps
+        period: 60,300
+        unit: countS
+      - desc: QPS环比增长率
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: qps_ratio
+        period: 60,300
+        unit: "%"
+      - desc: QPS环比下降率
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: qps_ratio_down
+        period: 60,300
+        unit: "%"
+      - desc: Web攻击拦截量(5m)
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: waf_blocks_5m
+        period: 60,300
+        unit: count
+      - desc: Web攻击拦截占比(5m)
+        dimensions:
+          - userId
+          - instanceId
+          - domain
+        measure: One of Maximum
+        name: waf_rate_5m
+        period: 60,300
+        unit: " "
+  region: cn-zhangjiakou
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9527"
+  prometheus.io/path: /metrics
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: aliyun-exporter.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
