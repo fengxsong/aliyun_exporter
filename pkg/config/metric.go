@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -10,11 +11,11 @@ import (
 type Metric struct {
 	Name        string   `json:"name"`
 	Alias       string   `json:"alias,omitempty"`
-	Period      string   `json:"period"`
-	Description string   `json:"desc"`
-	Dimensions  []string `json:"dimensions"`
-	Unit        string   `json:"unit"`
-	Measure     string   `json:"measure"`
+	Period      string   `json:"period,omitempty"`
+	Description string   `json:"desc,omitempty"`
+	Dimensions  []string `json:"dimensions,omitempty"`
+	Unit        string   `json:"unit,omitempty"`
+	Measure     string   `json:"measure,omitempty"`
 	Format      bool     `json:"format,omitempty"`
 	desc        *prometheus.Desc
 }
@@ -38,6 +39,7 @@ func (m *Metric) setDefaults() {
 	default:
 		m.Measure = "Average"
 	}
+	m.Description = fmt.Sprintf("%s unit:%s measure:%s", m.Description, m.Unit, m.Measure)
 }
 
 // String name of metric

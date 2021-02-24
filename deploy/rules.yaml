@@ -1,0 +1,143 @@
+groups:
+- name: slb
+  rules:
+  - alert: slb_5xx_percent:critical
+    expr: |-
+      sum(cloudmonitor_acs_slb_dashboard_StatusCode5xx) by (account_name,provider,instanceId, port) /
+      sum(cloudmonitor_acs_slb_dashboard_Qps) by (account_name,provider,instanceId, port) > 0.05
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} SLB {{ $labels.instanceId }}:{{ $labels.port }} 5xx percent > 5%'
+  - alert: slb_response_time:critical
+    expr: |-
+      avg(cloudmonitor_acs_slb_dashboard_Rt) by (account_name,provider,instanceId, port) > 1000
+    labels:
+      severity: warning
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} SLB {{ $labels.instanceId }}:{{ $labels.port }} RT > 1000ms'
+  - alert: slb_tx_traffic_drop_percent:critical
+    expr: |-
+      sum(cloudmonitor_acs_slb_dashboard_DropTrafficTX) by (account_name,provider,instanceId, port) /
+      sum(cloudmonitor_acs_slb_dashboard_TrafficTXNew) by (account_name,provider,instanceId, port) > 0.001
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} SLB {{ $labels.instanceId }}:{{ $labels.port }} tx traffic drop percent > 0.1%'
+  - alert: slb_rx_traffic_drop_percent:critical
+    expr: |-
+      sum(cloudmonitor_acs_slb_dashboard_DropTrafficRX) by (account_name,provider,instanceId, port) /
+      sum(cloudmonitor_acs_slb_dashboard_TrafficRXNew) by (account_name,provider,instanceId, port) > 0.001
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} SLB {{ $labels.instanceId }}:{{ $labels.port }} rx traffic drop percent > 0.1%'
+
+- name: rds
+  rules:
+  - alert: rds_cpu_pressure:high
+    expr: |-
+      sum(cloudmonitor_acs_rds_dashboard_CpuUsage
+        * on (instanceId) group_left(desc,regionId)
+        label_replace(cloudmonitor_rds_instance_info, "instanceId", "$1", "dbInstanceId", "(.*)"))
+      without (instance, userId, job) > 95
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} RDS {{ $labels.desc }} under high cpu pressure > 95%'
+  - alert: rds_memory_pressure:high
+    expr: |-
+      sum(cloudmonitor_acs_rds_dashboard_MemoryUsage
+        * on (instanceId) group_left(desc,regionId)
+        label_replace(cloudmonitor_rds_instance_info, "instanceId", "$1", "dbInstanceId", "(.*)"))
+      without (instance, userId, job) > 95
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} RDS {{ $labels.desc }} under high memory pressure > 95%'
+  - alert: rds_iops_pressure:critical
+    expr: |-
+      sum(cloudmonitor_acs_rds_dashboard_IOPSUsage
+        * on (instanceId) group_left(desc,regionId)
+        label_replace(cloudmonitor_rds_instance_info, "instanceId", "$1", "dbInstanceId", "(.*)"))
+      without (instance, userId, job) > 90
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} RDS {{ $labels.desc }} under high iops pressure > 90%'
+  - alert: rds_disk_space_exhausted:critical
+    expr: |-
+      sum(cloudmonitor_acs_rds_dashboard_DiskUsage
+        * on (instanceId) group_left(desc,regionId)
+        label_replace(cloudmonitor_rds_instance_info, "instanceId", "$1", "dbInstanceId", "(.*)"))
+      without (instance, userId, job) > 95
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} RDS {{ $labels.DBInstanceDescription }} disk space will be exhausted soon > 95%'
+  - alert: rds_connection_pressure:critical
+    expr: |-
+      sum(cloudmonitor_acs_rds_dashboard_ConnectionUsage
+        * on (instanceId) group_left(desc,regionId)
+        label_replace(cloudmonitor_rds_instance_info, "instanceId", "$1", "dbInstanceId", "(.*)"))
+      without (instance, userId, job) > 95
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} RDS {{ $labels.desc }} connection usage > 95%'
+  - alert: rds_slow_queries:critical
+    expr: |-
+      sum(cloudmonitor_acs_rds_dashboard_MySQL_SlowQueries
+        * on (instanceId) group_left(desc,regionId)
+        label_replace(cloudmonitor_rds_instance_info, "instanceId", "$1", "dbInstanceId", "(.*)"))
+      without (instance, userId, job) > 10
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} RDS {{ $labels.desc }} slow queries > 10 counts/second'
+
+- name: redis
+  rules:
+  - alert: redis_cpu_pressure:critical
+    expr: |-
+      sum(cloudmonitor_acs_kvstore_StandardCpuUsage
+          * on (instanceId) group_left(address,name,regionId)
+          label_replace(cloudmonitor_redis_instance_info, "instanceId", "$1", "instanceId", "(.*)"))
+      without (instance, userId, job) > 95
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} Redis {{ $labels.InstanceName }} under high cpu pressure > 95%'
+  - alert: redis_memory_pressure:critical
+    expr: |-
+      sum(cloudmonitor_acs_kvstore_StandardMemoryUsage
+          * on (instanceId) group_left(address,name,regionId)
+          label_replace(cloudmonitor_meta_redis_info, "instanceId", "$1", "instanceId", "(.*)"))
+      without (instance, userId, job) > 95
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} Redis {{ $labels.InstanceName }} memory usage > 95%'
+  - alert: redis_connection_pressure:high
+    expr: |-
+      sum(cloudmonitor_acs_kvstore_StandardConnectionUsage
+          * on (instanceId) group_left(address,name,regionId)
+          label_replace(cloudmonitor_meta_redis_info, "instanceId", "$1", "instanceId", "(.*)"))
+      without (instance, userId, job) > 95
+    labels:
+      severity: critical
+    for: 5m
+    annotations:
+      summary: '{{ $labels.account_name }}{{ $labels.provider }} Redis {{ $labels.InstanceName }} connection usage > 95%'

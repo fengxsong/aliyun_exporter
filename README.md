@@ -64,11 +64,14 @@ kubectl get po -n monitoring -w
   scrape_timeout: 60s
   static_configs:
   - targets: ['aliyun-exporter:9527']
+    labels:
+      account_name: xxxx
+      provider: aliyun # or aliyun_jst
 ```
 
 ### prometheus rules
 
-todo...
+[sample file](https://../deploy/rules.yaml)
 
 ## Limitation
 

@@ -36,6 +36,9 @@ func NewServiceClient(ak, secret, region string, rt http.RoundTripper, logger lo
 	sc := &ServiceClient{
 		collectors: make(map[string]service.Collector),
 	}
+	if logger == nil {
+		logger = log.NewNopLogger()
+	}
 	for name, fn := range service.CollectorFunc() {
 		collector, err := fn(ak, secret, region, rt, logger)
 		if err != nil {

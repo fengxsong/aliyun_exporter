@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/cms"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -108,6 +109,9 @@ func NewMetricClient(ak, secret, region string, rt http.RoundTripper, logger log
 		return nil, err
 	}
 	cmsClient.SetTransport(rt)
+	if logger == nil {
+		logger = log.NewNopLogger()
+	}
 	return &MetricClient{cmsClient, logger}, nil
 }
 
@@ -161,10 +165,12 @@ func (c *MetricClient) DescribeMetricMetaList(namespaces ...string) (map[string]
 	for _, ns := range namespaces {
 		req := cms.CreateDescribeMetricMetaListRequest()
 		req.Namespace = ns
+		req.PageSize = requests.NewInteger(100)
 		resp, err := c.cms.DescribeMetricMetaList(req)
 		if err != nil {
 			return nil, err
 		}
+		level.Debug(c.logger).Log("content", resp.GetHttpContentString())
 		m[ns] = resp.Resources.Resource
 	}
 	return m, nil
