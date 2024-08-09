@@ -1,90 +1,54 @@
-# Aliyun CloudMonitor Exporter
+# Aliyun Exporter
 
-exporter for Aliyun CloudMonitor. Written in Golang, inspired by [aliyun-exporter](https://github.com/aylei/aliyun-exporter).
+a prometheus exporter for Aliyun CloudMonitor service. Written in Golang, inspired by [aliyun_exporter](https://github.com/aylei/aliyun_exporter).
 
 ## Develop
 
 ```bash
-git clone https://github.com/fengxsong/aliyun-exporter
-cd aliyun-exporter
+git clone https://github.com/fengxsong/aliyun_exporter
+cd aliyun_exporter
 make tidy
-```
-
-## Build
-
-```bash
-# Binary
-make bin
-# docker image
-make docker-build
 ```
 
 ## Usage
 
 ```bash
 make bin
-# print example of config
-./build/_output/bin/aliyun-exporter print-config --ak xxxx --secret xxxx [NAMESPACES...]
-# run
-./build/_output/bin/aliyun-exporter serve [--config=/path/of/config]
+# generate example of config
+./build/_output/bin/aliyun_exporter generate-example-config --accesskey xxxx ----accesskeysecret xxxx
+# run http metrics handler
+./build/_output/bin/aliyun_exporter serve [--config=/path/of/config]
 ```
 
-## Deploy
-
-### Docker-compose
-
-Pre-requisites:
-
-- Docker
-- docker-compose
-
-```bash
-# copy and modify example.yaml first
-cd deploy
-docker-compose up -d
-```
-
-### Kubernetes
-
-Pre-requisites:
-
-- Kubernetes
-- helm
-
-```bash
-helm install -n monitoring aliyun-exporter deploy/aliyun-exporter
-kubectl get po -n monitoring -w
-```
-
-### prometheus job
+### Create a prometheus scrape job
 
 ```yaml
-- job_name: 'aliyun-exporter'
+- job_name: 'aliyun_exporter'
   scrape_interval: 60s
   scrape_timeout: 60s
   static_configs:
-  - targets: ['aliyun-exporter:9527']
+  - targets: ['aliyun_exporter:9527']
     labels:
       account_name: xxxx
       provider: aliyun # or aliyun_jst
 ```
 
-### prometheus rules
+### Prometheus rules sample
 
 [sample file](https://../deploy/rules.yaml)
 
 ## Limitation
 
 - an exporter instance can only scrape metrics from single region
-- ...
 
 ## TODO
 
-- dynamic rate limiter
 - grafana dashboard
 
 ## Ref
 
-- https://partners-intl.aliyun.com/help/doc-detail/51939.htm?spm=a2c63.p38356.b99.150.7c8312d7lwqVVC
-- https://partners-intl.aliyun.com/help/doc-detail/163515.htm?spm=a2c63.p38356.a3.4.326357304ihN0P
-- https://github.com/aliyun/alibaba-cloud-sdk-go
+- [Metrics listing](https://www.alibabacloud.com/help/en/cms/support/appendix-1-metrics)
+- [DescribeMetricMetaList](https://www.alibabacloud.com/help/en/cms/developer-reference/api-cms-2019-01-01-describemetricmetalist?spm=a2c63.p38356.0.0.12e23344MoHCLk)
+- [DescribeMetricLast](https://www.alibabacloud.com/help/en/cms/developer-reference/api-cms-2019-01-01-describemetriclast?spm=a2c63.p38356.0.0.7e7d5b35Ml1iqb)
+- [IAM access](https://help.aliyun.com/zh/ram/developer-reference/aliyuncloudmonitorreadonlyaccess?spm=a2c4g.11186623.0.0.4eafd1eaFYcOoS)
+- [SDK](https://github.com/aliyun/alibaba-cloud-sdk-go)

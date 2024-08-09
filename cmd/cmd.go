@@ -2,136 +2,108 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
-	"text/tabwriter"
 
-	"github.com/spf13/cobra"
-	"sigs.k8s.io/yaml"
+	"github.com/alecthomas/kingpin/v2"
+	"github.com/go-kit/log/level"
+	"github.com/prometheus/common/promlog"
+	"gopkg.in/yaml.v2"
 
-	"github.com/fengxsong/aliyun-exporter/pkg/client"
-	"github.com/fengxsong/aliyun-exporter/pkg/collector"
-	"github.com/fengxsong/aliyun-exporter/pkg/config"
-	"github.com/fengxsong/aliyun-exporter/pkg/handler"
-	"github.com/fengxsong/aliyun-exporter/pkg/ratelimit"
-	"github.com/fengxsong/aliyun-exporter/version"
+	"github.com/fengxsong/aliyun_exporter/pkg/client"
+	"github.com/fengxsong/aliyun_exporter/pkg/ratelimit"
 )
 
-const appName = "cloudmonitor"
-
-// NewRootCommand create root command
-func NewRootCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:           appName,
-		Short:         "Exporter for aliyun cloudmonitor",
-		SilenceErrors: true,
-		SilenceUsage:  true,
-	}
-	cmd.AddCommand(newServeMetricsCommand())
-	cmd.AddCommand(newVersionCommand())
-	cmd.AddCommand(printConfigCommand())
-	cmd.AddCommand(newListMetricNamespacesCommand())
-	return cmd
+type flagGroup interface {
+	Flag(string, string) *kingpin.FlagClause
 }
 
-func newServeMetricsCommand() *cobra.Command {
-	o := &options{
-		so: &serveOption{},
-	}
-	cmd := &cobra.Command{
-		Use:   "serve",
-		Short: "Serve HTTP metrics handler",
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return o.Complete()
-		},
-		RunE: func(_ *cobra.Command, _ []string) error {
-			cfg, err := config.Parse(o.so.configFile)
-			if err != nil {
-				return err
-			}
-			rt := ratelimit.New(o.rateLimit)
-			cm, err := collector.NewCloudMonitorCollector(appName, cfg, rt, logger)
-			if err != nil {
-				return err
-			}
-			iif, err := collector.NewInstanceInfoCollector(appName, cfg, rt, logger)
-			if err != nil {
-				return err
-			}
-			h, err := handler.New(o.so.listenAddress, o.so.metricPath, logger, cm, iif)
-			if err != nil {
-				return err
-			}
-			return h.Run()
-		},
-	}
-	o.AddFlags(cmd)
-	return cmd
+type command interface {
+	help() string
+	run(*kingpin.ParseContext) error
 }
 
-func newVersionCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "version",
-		Short: "Print version info",
-		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Println(version.Version())
-		},
+var commands = map[string]command{}
+
+func AddCommands(app *kingpin.Application) {
+	for name, c := range commands {
+		cc := app.Command(name, c.help())
+		if flagRegisterer, ok := c.(interface {
+			addFlags(flagGroup)
+		}); ok {
+			flagRegisterer.addFlags(cc)
+		}
+		cc.Action(c.run)
 	}
 }
 
-func newListMetricNamespacesCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "list-metrics",
-		Short: "List avaliable namespaces of metrics",
-		Run: func(_ *cobra.Command, _ []string) {
-			w := tabwriter.NewWriter(os.Stdout, 0, 8, 0, '\t', 0)
-			fmt.Fprintln(w, "NAMESPACE\tDESCRIPTION")
-			for name, desc := range client.AllNamespaces() {
-				fmt.Fprintf(w, "%s\t%s\n", name, desc)
-			}
-			w.Flush()
-		},
-	}
+func init() {
+	commands["generate-example-config"] = &generateExampleConfigOption{}
 }
 
-func printConfigCommand() *cobra.Command {
-	o := &options{
-		pco: &printConfigOption{},
+func rateLimitFlag(f flagGroup) *int {
+	return f.Flag("rate", "RPS/request per second to alibaba cloudmonitor service").Default("50").Int()
+}
+
+type generateExampleConfigOption struct {
+	out           string
+	ak, sk        string
+	region        string
+	includes      []string
+	listing       bool
+	rate          *int
+	promlogConfig *promlog.Config
+}
+
+func (o *generateExampleConfigOption) help() string { return "Print example of config file" }
+
+func (o *generateExampleConfigOption) addFlags(f flagGroup) {
+	f.Flag("out", "Filepath to write example config to").Default("").Short('o').StringVar(&o.out)
+	f.Flag("accesskey", "Access key").Envar("ALIBABA_CLOUD_ACCESS_KEY").Required().StringVar(&o.ak)
+	f.Flag("accesskeysecret", "Access key secret").Envar("ALIBABA_CLOUD_ACCESS_KEY_SECRET").Required().StringVar(&o.sk)
+	f.Flag("region", "Region id").Default("cn-hangzhou").StringVar(&o.region)
+	f.Flag("includes", "Only print metrics list of specified namespaces, default will print all").Default("").StringsVar(&o.includes)
+	f.Flag("list", "List avaliable namespaces of metrics only").Default("false").Short('l').BoolVar(&o.listing)
+
+	o.promlogConfig = addPromlogConfig(f)
+	o.rate = rateLimitFlag(f)
+}
+
+func (o *generateExampleConfigOption) run(_ *kingpin.ParseContext) error {
+	rt := ratelimit.New(*o.rate)
+	logger := promlog.New(o.promlogConfig)
+	mc, err := client.NewMetricClient(o.ak, o.sk, o.region, rt, logger)
+	if err != nil {
+		return err
 	}
-	cmd := &cobra.Command{
-		Use:   "print-config",
-		Short: "Print example of config file",
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return o.Complete()
-		},
-		RunE: func(_ *cobra.Command, args []string) error {
-			rt := ratelimit.New(o.rateLimit)
-			cm, err := client.NewMetricClient(o.pco.ak, o.pco.secret, o.pco.region, rt, logger)
-			if err != nil {
-				return err
-			}
-			metaMap, err := cm.DescribeMetricMetaList(args...)
-			if err != nil {
-				return err
-			}
-			cfg := client.GenerateExampleConfig(o.pco.ak, o.pco.secret, o.pco.region, metaMap)
-			b, err := yaml.Marshal(&cfg)
-			if err != nil {
-				return err
-			}
-			if len(o.pco.out) == 0 {
-				fmt.Println(string(b))
-				return nil
-			}
-			w, err := ioutil.TempFile("", "config")
-			if err != nil {
-				return nil
-			}
-			defer w.Close()
-			w.Write(b)
-			return os.Rename(w.Name(), o.pco.out)
-		},
+	if o.listing {
+		namespaces, err := mc.ListingNamespace()
+		if err != nil {
+			return err
+		}
+		level.Info(logger).Log("msg", fmt.Sprintf("available namespaces are %s", namespaces))
+		return nil
 	}
-	o.AddFlags(cmd)
-	return cmd
+	if len(o.includes) == 1 && o.includes[0] == "" {
+		o.includes = []string{}
+	}
+	cfg, err := mc.GenerateExampleConfig(o.ak, o.sk, o.region, o.includes...)
+	if err != nil {
+		return err
+	}
+	var writer io.Writer
+	switch o.out {
+	case "", "stdout":
+		writer = os.Stdout
+	default:
+		writer, err = os.Create(o.out)
+		if err != nil {
+			return err
+		}
+	}
+	if err = yaml.NewEncoder(writer).Encode(&cfg); err != nil {
+		return err
+	}
+	level.Info(logger).Log("msg", "example configurations have been successfully generated. Please modify the corresponding 'period' and 'measure' fields before running.")
+	return nil
 }

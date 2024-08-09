@@ -3,21 +3,24 @@ package config
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Metric meta
 type Metric struct {
-	Name        string   `json:"name"`
-	Alias       string   `json:"alias,omitempty"`
-	Period      string   `json:"period,omitempty"`
-	Description string   `json:"desc,omitempty"`
-	Dimensions  []string `json:"dimensions,omitempty"`
-	Unit        string   `json:"unit,omitempty"`
-	Measure     string   `json:"measure,omitempty"`
-	Format      bool     `json:"format,omitempty"`
-	desc        *prometheus.Desc
+	Name        string   `yaml:"name"`
+	Alias       string   `yaml:"alias,omitempty"`
+	Period      string   `yaml:"period,omitempty"`
+	Description string   `yaml:"desc,omitempty"`
+	Dimensions  []string `yaml:"dimensions,omitempty"`
+	Unit        string   `yaml:"unit,omitempty"`
+	Measure     string   `yaml:"measure,omitempty"`
+	Format      bool     `yaml:"format,omitempty"`
+
+	once sync.Once
+	desc *prometheus.Desc
 }
 
 // setdefault options
@@ -42,6 +45,8 @@ func (m *Metric) setDefaults() {
 	m.Description = fmt.Sprintf("%s unit:%s measure:%s", m.Description, m.Unit, m.Measure)
 }
 
+var formalizeMetricName = strings.NewReplacer(".", "_", "-", "_").Replace
+
 // String name of metric
 func (m *Metric) String() string {
 	if m.Alias != "" {
@@ -50,22 +55,23 @@ func (m *Metric) String() string {
 	if m.Format {
 		return strings.Join([]string{m.Name, formatUnit(m.Unit)}, "_")
 	}
-	return m.Name
+	return formalizeMetricName(m.Name)
 }
 
 // Desc to prometheus desc
-func (m *Metric) Desc(ns, sub string, dimensions ...string) *prometheus.Desc {
+func (m *Metric) Desc(namespace, sub string, dimensions ...string) *prometheus.Desc {
 	if len(m.Dimensions) == 0 {
 		m.Dimensions = dimensions
 	}
-	if m.desc == nil {
+	// TODO: if length of dimemsions is changed
+	m.once.Do(func() {
 		m.desc = prometheus.NewDesc(
-			strings.Join([]string{ns, sub, m.String()}, "_"),
+			prometheus.BuildFQName(namespace, sub, m.String()),
 			m.Description,
 			m.Dimensions,
 			nil,
 		)
-	}
+	})
 	return m.desc
 }
 

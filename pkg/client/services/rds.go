@@ -1,70 +1,61 @@
-package rds
+package services
 
 import (
-	"net/http"
-
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/rds"
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/fengxsong/aliyun-exporter/pkg/client/service"
-)
-
-// constants
-const (
-	name     = "rds"
-	pageSize = 100
 )
 
 // Client wrap client
-type Client struct {
+type rdsClient struct {
 	*rds.Client
 	desc   *prometheus.Desc
 	logger log.Logger
 }
 
-// New create ServiceCollector
-func New(ak, secret, region string, rt http.RoundTripper, logger log.Logger) (service.Collector, error) {
-	client, err := rds.NewClientWithAccessKey(region, ak, secret)
-	if err != nil {
-		return nil, err
-	}
-	client.SetTransport(rt)
-	return &Client{Client: client, logger: logger}, nil
-}
-
-// Collect collect metrics
-func (c *Client) Collect(namespace string, ch chan<- prometheus.Metric) {
+func (c *rdsClient) Collect(namespace string, ch chan<- prometheus.Metric) error {
 	if c.desc == nil {
-		c.desc = service.NewInstanceClientDesc(namespace, name, []string{"regionId", "dbInstanceId", "dbType", "desc", "status"})
+		c.desc = newDescOfInstnaceInfo(namespace, "rds", []string{"regionId", "dbInstanceId", "dbType", "desc", "status"})
 	}
 	req := rds.CreateDescribeDBInstancesRequest()
 	req.PageSize = requests.NewInteger(pageSize)
-	instanceCh := make(chan rds.DBInstance, 1<<10)
+	resultChan := make(chan *result, 1<<10)
 	go func() {
-		defer close(instanceCh)
+		defer close(resultChan)
 		for hasNextPage, pageNum := true, 1; hasNextPage != false; pageNum++ {
 			req.PageNumber = requests.NewInteger(pageNum)
 			response, err := c.DescribeDBInstances(req)
 			if err != nil {
+				resultChan <- &result{err: err}
 				return
 			}
 			if len(response.Items.DBInstance) < pageSize {
 				hasNextPage = false
 			}
 			for i := range response.Items.DBInstance {
-				instanceCh <- response.Items.DBInstance[i]
+				resultChan <- &result{v: response.Items.DBInstance[i]}
 			}
 		}
 	}()
 
-	for ins := range instanceCh {
+	for res := range resultChan {
+		if res.err != nil {
+			return res.err
+		}
+		ins := res.v.(rds.DBInstance)
 		ch <- prometheus.MustNewConstMetric(c.desc, prometheus.GaugeValue, 1.0,
 			ins.RegionId, ins.DBInstanceId, ins.DBInstanceType, ins.DBInstanceDescription, ins.DBInstanceStatus)
 	}
+	return nil
 }
 
 func init() {
-	service.Register(name, New)
+	register("rds", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
+		client, err := rds.NewClientWithAccessKey(s1, s2, s3)
+		if err != nil {
+			return nil, err
+		}
+		return &rdsClient{Client: client, logger: l}, nil
+	})
 }

@@ -2,21 +2,19 @@ package config
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 
-	"sigs.k8s.io/yaml"
+	"gopkg.in/yaml.v2"
 )
 
 // Config exporter config
 type Config struct {
-	AccessKey       string `json:"accessKey"`
-	AccessKeySecret string `json:"accessKeySecret"`
-	Region          string `json:"region"`
-	// todo: add extra labels
-	Labels        map[string]string    `json:"labels,omitempty"`
-	Metrics       map[string][]*Metric `json:"metrics"` // mapping for namespace and metrics
-	InstanceInfos []string             `json:"instanceInfos"`
+	AccessKey       string               `yaml:"access_key"`
+	AccessKeySecret string               `yaml:"access_key_secret"`
+	Region          string               `yaml:"region"`
+	Labels          map[string]string    `yaml:"labels,omitempty"` // todo: add extra labels
+	Metrics         map[string][]*Metric `yaml:"metrics"`          // mapping for namespace and metrics
+	InstanceTypes   []string             `yaml:"instance_types"`
 }
 
 func (c *Config) setDefaults() {
@@ -32,7 +30,7 @@ func (c *Config) setDefaults() {
 
 // Parse parse config from file
 func Parse(path string) (*Config, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +38,8 @@ func Parse(path string) (*Config, error) {
 	if err = yaml.Unmarshal(b, &cfg); err != nil {
 		return nil, err
 	}
-	ak := getEnvOrDefault("ACCESS_KEY", cfg.AccessKey)
-	secret := getEnvOrDefault("ACCESS_KEY_SECRET", cfg.AccessKeySecret)
+	ak := getEnvOrDefault("ALIBABA_CLOUD_ACCESS_KEY", cfg.AccessKey)
+	secret := getEnvOrDefault("ALIBABA_CLOUD_ACCESS_KEY_SECRET", cfg.AccessKeySecret)
 	if len(ak) == 0 || len(secret) == 0 {
 		return nil, errors.New("credentials not provide")
 	}
@@ -50,8 +48,8 @@ func Parse(path string) (*Config, error) {
 }
 
 func getEnvOrDefault(key string, defaultVal string) string {
-	val := os.Getenv(key)
-	if val != "" {
+	val, ok := os.LookupEnv(key)
+	if ok {
 		return val
 	}
 	return defaultVal

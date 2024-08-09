@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/cms"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/fengxsong/aliyun-exporter/pkg/client/service"
-	"github.com/fengxsong/aliyun-exporter/pkg/config"
+	"github.com/fengxsong/aliyun_exporter/pkg/client/services"
+	"github.com/fengxsong/aliyun_exporter/pkg/config"
 )
 
 var ignores = map[string]struct{}{
@@ -22,45 +24,6 @@ var ignores = map[string]struct{}{
 	"Maximum":   {},
 	"Minimum":   {},
 	"Average":   {},
-}
-
-// map for all avaliable namespaces
-// todo: is there a way to add desc into yaml file?
-var allNamespaces = map[string]string{
-	"acs_ecs_dashboard":              "Elastic Compute Service (ECS)",
-	"acs_containerservice_dashboard": "Container Service for Swarm",
-	"acs_kubernetes":                 "Container Service for Kubernetes (ACK)",
-	"acs_oss_dashboard":              "Object Storage Service (OSS)",
-	"acs_slb_dashboard":              "Server Load Balancer (SLB)",
-	"acs_vpc_eip":                    "Elastic IP addresses (EIPs)",
-	"acs_nat_gateway":                "NAT Gateway",
-	"acs_anycast_eip":                "Anycast Elastic IP address (EIP)",
-	"acs_rds_dashboard":              "ApsaraDB RDS",
-	"acs_mongodb":                    "ApsaraDB for MongoDB",
-	"acs_memcache":                   "ApsaraDB for Memcache",
-	"acs_kvstore":                    "ApsaraDB for Redis",
-	"acs_hitsdb":                     "Time Series Database (TSDB)",
-	"acs_clickhouse":                 "ClickHouse",
-	"acs_cds":                        "ApsaraDB for Cassandra",
-	"waf":                            "Web Application Firewall (WAF)",
-	"acs_elasticsearch":              "Elasticsearch",
-	"acs_mns_new":                    "queues of Message Service (MNS)",
-	"acs_kafka":                      "Message Queue for Apache Kafka",
-	"acs_amqp":                       "Alibaba Cloud Message Queue for AMQP instances",
-}
-
-// AllNamespaces return allNamespaces
-func AllNamespaces() map[string]string {
-	return allNamespaces
-}
-
-// allNamesOfNamespaces return all avaliable namespaces
-func allNamesOfNamespaces() []string {
-	ss := make([]string, 0, len(allNamespaces))
-	for name := range allNamespaces {
-		ss = append(ss, name)
-	}
-	return ss
 }
 
 // Datapoint datapoint
@@ -116,36 +79,52 @@ func NewMetricClient(ak, secret, region string, rt http.RoundTripper, logger log
 }
 
 // retrive get datapoints for metric
+// TODO: can we using BatchExport function instead? seems like this function returned a time-range metrics series
 func (c *MetricClient) retrive(sub string, name string, period string) ([]Datapoint, error) {
-	req := cms.CreateDescribeMetricLastRequest()
-	req.Namespace = sub
-	req.MetricName = name
-	req.Period = period
-	resp, err := c.cms.DescribeMetricLast(req)
-	if err != nil {
-		return nil, err
+	var ret []Datapoint
+
+	var (
+		firstRun  = true
+		nextToken string
+	)
+
+	for {
+		if !firstRun && nextToken == "" {
+			break
+		}
+		req := cms.CreateDescribeMetricLastRequest()
+		req.Namespace = sub
+		req.MetricName = name
+		req.Period = period
+		req.NextToken = nextToken
+		resp, err := c.cms.DescribeMetricLast(req)
+		if err != nil {
+			return nil, err
+		}
+
+		var datapoints []Datapoint
+		if err = json.Unmarshal([]byte(resp.Datapoints), &datapoints); err != nil {
+			// some unexpected error
+			level.Error(c.logger).Log("content", resp.GetHttpContentString(), "error", err)
+			return nil, err
+		}
+		ret = append(ret, datapoints...)
+		nextToken = resp.NextToken
+		firstRun = false
 	}
 
-	var datapoints []Datapoint
-	if err = json.Unmarshal([]byte(resp.Datapoints), &datapoints); err != nil {
-		// some execpected error
-		level.Debug(c.logger).Log("content", resp.GetHttpContentString(), "error", err)
-		return nil, err
-	}
-
-	return datapoints, nil
+	return ret, nil
 }
 
 // Collect do collect metrics into channel
-func (c *MetricClient) Collect(namespace string, sub string, m *config.Metric, ch chan<- prometheus.Metric) {
+func (c *MetricClient) Collect(namespace string, sub string, m *config.Metric, ch chan<- prometheus.Metric) error {
 	if m.Name == "" {
 		level.Warn(c.logger).Log("msg", "metric name must been set")
-		return
+		return nil
 	}
 	datapoints, err := c.retrive(sub, m.Name, m.Period)
 	if err != nil {
-		level.Error(c.logger).Log("msg", "failed to retrive datapoints", "namespace", sub, "name", m.String(), "error", err)
-		return
+		return err
 	}
 	for _, dp := range datapoints {
 		val := dp.Get(m.Measure)
@@ -156,64 +135,118 @@ func (c *MetricClient) Collect(namespace string, sub string, m *config.Metric, c
 			dp.Values(m.Dimensions...)...,
 		)
 	}
+	return nil
 }
 
-// DescribeMetricMetaList return metrics meta list
-func (c *MetricClient) DescribeMetricMetaList(namespaces ...string) (map[string][]cms.Resource, error) {
-	namespaces = filterNamespaces(namespaces...)
-	m := make(map[string][]cms.Resource)
-	for _, ns := range namespaces {
+// TODO: is there any convenient way to list all those namespaces?
+func (c *MetricClient) ListingNamespace() ([]string, error) {
+	resources, err := c.describeMetricMetaListWithNamespace("")
+	if err != nil {
+		return nil, err
+	}
+	m := make(map[string]struct{})
+	var ret []string
+	for _, res := range resources {
+		if _, ok := m[res.Namespace]; !ok {
+			m[res.Namespace] = struct{}{}
+			ret = append(ret, res.Namespace)
+		}
+	}
+	sort.Strings(ret)
+	return ret, nil
+}
+
+func (c *MetricClient) describeMetricMetaListWithNamespace(namespace string) ([]cms.Resource, error) {
+	var ret []cms.Resource
+	pageNumber := 1
+	for {
 		req := cms.CreateDescribeMetricMetaListRequest()
-		req.Namespace = ns
-		req.PageSize = requests.NewInteger(100)
+		if namespace != "" {
+			req.Namespace = namespace
+		}
+		req.PageSize = requests.NewInteger(1 << 8)
+		req.PageNumber = requests.NewInteger(pageNumber)
 		resp, err := c.cms.DescribeMetricMetaList(req)
 		if err != nil {
 			return nil, err
 		}
-		level.Debug(c.logger).Log("content", resp.GetHttpContentString())
-		m[ns] = resp.Resources.Resource
+		level.Debug(c.logger).Log("response", resp.GetHttpContentString())
+		totalCount, err := strconv.Atoi(resp.TotalCount)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, resp.Resources.Resource...)
+		pageNumber++
+		if len(ret) >= totalCount {
+			break
+		}
 	}
-	return m, nil
+	return ret, nil
+}
+
+func (c *MetricClient) describeMetricMetaList(includes ...string) ([]cms.Resource, error) {
+	if len(includes) == 0 {
+		return c.describeMetricMetaListWithNamespace("")
+	}
+
+	type metricMetaResult struct {
+		resources []cms.Resource
+		err       error
+	}
+
+	ch := make(chan *metricMetaResult, len(includes))
+	wg := &sync.WaitGroup{}
+	for i := range includes {
+		wg.Add(1)
+		go func(namespace string) {
+			defer wg.Done()
+			res, err := c.describeMetricMetaListWithNamespace(namespace)
+			if err != nil {
+				close(ch)
+				ch <- &metricMetaResult{err: err}
+				return
+			}
+			ch <- &metricMetaResult{resources: res}
+		}(includes[i])
+	}
+	wg.Wait()
+	close(ch)
+
+	var ret []cms.Resource
+	for res := range ch {
+		if res.err != nil {
+			return nil, res.err
+		}
+		ret = append(ret, res.resources...)
+	}
+	return ret, nil
 }
 
 // GenerateExampleConfig create example config
-func GenerateExampleConfig(ak, secret, region string, m map[string][]cms.Resource) *config.Config {
+func (c *MetricClient) GenerateExampleConfig(ak, sk, region string, includes ...string) (*config.Config, error) {
+	metas, err := c.describeMetricMetaList(includes...)
+	if err != nil {
+		return nil, err
+	}
 	cfg := &config.Config{
 		AccessKey:       ak,
-		AccessKeySecret: secret,
+		AccessKeySecret: sk,
 		Region:          region,
-		InstanceInfos:   service.Services(),
+		InstanceTypes:   services.Names(),
 		Metrics:         make(map[string][]*config.Metric),
 	}
-	for ns, resources := range m {
-		metrics := make([]*config.Metric, 0, len(resources))
-		for _, res := range resources {
-			metrics = append(metrics, &config.Metric{
-				Name:        res.MetricName,
-				Period:      res.Periods,
-				Description: res.Description,
-				Dimensions:  strings.Split(res.Dimensions, ","),
-				Unit:        res.Unit,
-				Measure:     res.Statistics,
-			})
+	for _, res := range metas {
+		if _, ok := cfg.Metrics[res.Namespace]; !ok {
+			cfg.Metrics[res.Namespace] = make([]*config.Metric, 0)
 		}
-		cfg.Metrics[ns] = metrics
+		cfg.Metrics[res.Namespace] = append(cfg.Metrics[res.Namespace], &config.Metric{
+			Name:        res.MetricName,
+			Period:      res.Periods,
+			Description: res.Description,
+			Dimensions:  strings.Split(res.Dimensions, ","),
+			Unit:        res.Unit,
+			Measure:     res.Statistics,
+		})
 	}
-	return cfg
-}
-
-func filterNamespaces(namespaces ...string) []string {
-	if len(namespaces) == 0 {
-		return allNamesOfNamespaces()
-	}
-	filters := make([]string, 0)
-	for _, ns := range namespaces {
-		if ns == "all" {
-			return allNamesOfNamespaces()
-		}
-		if _, ok := allNamespaces[ns]; ok {
-			filters = append(filters, ns)
-		}
-	}
-	return filters
+	return cfg, nil
 }
