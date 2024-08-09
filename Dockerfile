@@ -8,7 +8,9 @@ WORKDIR /workspace
 COPY go.mod go.sum /workspace/
 RUN go mod download
 
-COPY cmd pkg main.go /workspace/
+COPY cmd /workspace/cmd
+COPY pkg /workspace/pkg
+COPY main.go /workspace/
 RUN CGO_ENABLED=0 go build -a -ldflags "${LDFLAGS}" -o aliyun_exporter main.go && ./aliyun_exporter --version
 
 FROM alpine:3
