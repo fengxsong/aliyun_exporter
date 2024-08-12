@@ -17,7 +17,7 @@ type slbClient struct {
 // Collect collect metrics
 func (c *slbClient) Collect(namespace string, ch chan<- prometheus.Metric) error {
 	if c.desc == nil {
-		c.desc = newDescOfInstnaceInfo(namespace, "acs_slb",
+		c.desc = newDescOfInstnaceInfo(namespace, "acs_slb_dashboard",
 			[]string{"regionId", "instanceId", "name", "address", "type", "status"})
 	}
 	req := slb.CreateDescribeLoadBalancersRequest()
@@ -56,7 +56,7 @@ func (c *slbClient) Collect(namespace string, ch chan<- prometheus.Metric) error
 }
 
 func init() {
-	register("acs_slb", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
+	register("acs_slb_dashboard", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
 		client, err := slb.NewClientWithAccessKey(s1, s2, s3)
 		if err != nil {
 			return nil, err

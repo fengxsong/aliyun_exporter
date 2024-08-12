@@ -16,7 +16,7 @@ type rdsClient struct {
 
 func (c *rdsClient) Collect(namespace string, ch chan<- prometheus.Metric) error {
 	if c.desc == nil {
-		c.desc = newDescOfInstnaceInfo(namespace, "acs_rds",
+		c.desc = newDescOfInstnaceInfo(namespace, "acs_rds_dashboard",
 			[]string{"regionId", "dbInstanceId", "name", "dbType", "desc", "status"})
 	}
 	req := rds.CreateDescribeDBInstancesRequest()
@@ -55,7 +55,7 @@ func (c *rdsClient) Collect(namespace string, ch chan<- prometheus.Metric) error
 }
 
 func init() {
-	register("acs_rds", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
+	register("acs_rds_dashboard", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
 		client, err := rds.NewClientWithAccessKey(s1, s2, s3)
 		if err != nil {
 			return nil, err

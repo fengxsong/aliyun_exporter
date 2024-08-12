@@ -15,7 +15,7 @@ type ecsClient struct {
 
 func (c *ecsClient) Collect(namespace string, ch chan<- prometheus.Metric) error {
 	if c.desc == nil {
-		c.desc = newDescOfInstnaceInfo(namespace, "acs_ecs", []string{"regionId", "instanceId", "instanceName", "hostname", "status"})
+		c.desc = newDescOfInstnaceInfo(namespace, "acs_ecs_dashboard", []string{"regionId", "instanceId", "instanceName", "hostname", "status"})
 	}
 
 	req := ecs.CreateDescribeInstancesRequest()
@@ -54,7 +54,7 @@ func (c *ecsClient) Collect(namespace string, ch chan<- prometheus.Metric) error
 }
 
 func init() {
-	register("acs_ecs", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
+	register("acs_ecs_dashboard", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
 		client, err := ecs.NewClientWithAccessKey(s1, s2, s3)
 		if err != nil {
 			return nil, err
