@@ -229,12 +229,35 @@ func (c *MetricClient) GenerateExampleConfig(ak, sk, region string, includes ...
 		return nil, err
 	}
 	cfg := &config.Config{
-		AccessKey:       ak,
-		AccessKeySecret: sk,
+		AccessKey:       "<changeme>",
+		AccessKeySecret: "<changeme>",
 		Region:          region,
-		InstanceTypes:   services.Names(),
 		Metrics:         make(map[string][]*config.Metric),
 	}
+
+	builtin := services.Names()
+	if len(includes) == 0 {
+		level.Info(c.logger).Log("msg", "no collectors specified, using builtin instance info collectors will be used", "collectors", strings.Join(builtin, ", "))
+		cfg.InstanceTypes = builtin
+	} else {
+		tmp := make(map[string]struct{})
+		for i := range builtin {
+			tmp[builtin[i]] = struct{}{}
+		}
+		var unsupported []string
+		for i := range includes {
+			if _, ok := tmp[includes[i]]; !ok {
+				unsupported = append(unsupported, includes[i])
+				continue
+			}
+			cfg.InstanceTypes = append(cfg.InstanceTypes, includes[i])
+		}
+		if len(unsupported) > 0 {
+			level.Warn(c.logger).
+				Log("msg", fmt.Sprintf("unsupported instance info collectors %s, implement by your own OR skip scraping instance info for those types", unsupported))
+		}
+	}
+
 	for _, res := range metas {
 		if _, ok := cfg.Metrics[res.Namespace]; !ok {
 			cfg.Metrics[res.Namespace] = make([]*config.Metric, 0)
