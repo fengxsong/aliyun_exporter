@@ -15,12 +15,13 @@ type esClient struct {
 
 func (c *esClient) Collect(namespace string, ch chan<- prometheus.Metric) error {
 	if c.desc == nil {
-		c.desc = newDescOfInstnaceInfo(namespace, "es", []string{"instanceId", "desc", "status"})
+		c.desc = newDescOfInstnaceInfo(namespace, "acs_elasticsearch", []string{"instanceId", "desc", "status"})
 	}
 
 	req := elasticsearch.CreateListInstanceRequest()
 	req.Size = requests.NewInteger(pageSize)
 	resultChan := make(chan *result, 1<<10)
+
 	go func() {
 		defer close(resultChan)
 		for hasNextPage, pageNum := true, 1; hasNextPage != false; pageNum++ {
@@ -30,7 +31,7 @@ func (c *esClient) Collect(namespace string, ch chan<- prometheus.Metric) error 
 				resultChan <- &result{err: err}
 				return
 			}
-			if len(response.Result) < pageSize {
+			if len(response.Result) < pageSize && len(response.Result) == 0 {
 				hasNextPage = false
 			}
 			for i := range response.Result {
@@ -51,7 +52,7 @@ func (c *esClient) Collect(namespace string, ch chan<- prometheus.Metric) error 
 }
 
 func init() {
-	register("es", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
+	register("acs_elasticsearch", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
 		client, err := elasticsearch.NewClientWithAccessKey(s1, s2, s3)
 		if err != nil {
 			return nil, err

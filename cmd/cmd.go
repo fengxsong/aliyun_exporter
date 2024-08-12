@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log/level"
@@ -91,6 +92,7 @@ func (o *generateExampleConfigOption) run(_ *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
+	level.Info(logger).Log("msg", fmt.Sprintf("the builtin instance info collectors are %s, feel free to summit a PR", strings.Join(cfg.InstanceTypes, ", ")))
 	var writer io.Writer
 	switch o.out {
 	case "", "stdout":
@@ -104,6 +106,6 @@ func (o *generateExampleConfigOption) run(_ *kingpin.ParseContext) error {
 	if err = yaml.NewEncoder(writer).Encode(&cfg); err != nil {
 		return err
 	}
-	level.Info(logger).Log("msg", "example configurations have been successfully generated. Please modify the corresponding 'period' and 'measure' fields before running.")
+	level.Info(logger).Log("msg", "example configurations have been successfully generated, please modify the corresponding 'period'/'measure'/'instance_types' fields before running.")
 	return nil
 }

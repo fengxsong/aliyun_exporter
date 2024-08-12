@@ -14,7 +14,7 @@ type Config struct {
 	Region          string               `yaml:"region"`
 	Labels          map[string]string    `yaml:"labels,omitempty"` // todo: add extra labels
 	Metrics         map[string][]*Metric `yaml:"metrics"`          // mapping for namespace and metrics
-	InstanceTypes   []string             `yaml:"instance_types"`
+	InstanceTypes   []string             `yaml:"instance_types"`   // enable scraping instance infos for label join
 }
 
 func (c *Config) setDefaults() {

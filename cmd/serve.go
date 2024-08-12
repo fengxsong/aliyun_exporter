@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -13,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/promlog"
 	promlogflag "github.com/prometheus/common/promlog/flag"
+	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
 
 	"github.com/fengxsong/aliyun_exporter/pkg/collector"
@@ -87,12 +90,16 @@ func (o *serveOption) run(_ *kingpin.ParseContext) error {
 	if err != nil {
 		return err
 	}
-	iic, err := collector.NewInstanceInfoCollector("cloudmonitor", cfg, rt, logger)
-	if err != nil {
-		return err
-	}
+	prometheus.MustRegister(cmc)
 
-	prometheus.MustRegister(cmc, iic)
+	if len(cfg.InstanceTypes) > 0 {
+		level.Info(logger).Log("msg", "enabling instance info collectors for lable joining", "collectors", strings.Join(cfg.InstanceTypes, ", "))
+		iic, err := collector.NewInstanceInfoCollector("cloudmonitor", cfg, rt, logger)
+		if err != nil {
+			return err
+		}
+		prometheus.MustRegister(iic)
+	}
 
 	http.Handle(o.metricsPath, promhttp.Handler())
 
@@ -101,6 +108,30 @@ func (o *serveOption) run(_ *kingpin.ParseContext) error {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Healthy"))
 	})
+
+	landingConfig := web.LandingConfig{
+		Name:        collector.Name(),
+		Description: "a prometheus exporter for scraping metrics from alibaba cloudmonitor services",
+		Version:     version.Info(),
+		Links: []web.LandingLinks{
+			{
+				Address:     o.metricsPath,
+				Text:        "Metrics",
+				Description: "endpoint for scraping metrics",
+			},
+			{
+				Address:     "/debug/pprof",
+				Text:        "Pprof",
+				Description: "pprof handlers",
+			},
+		},
+	}
+
+	landingpage, err := web.NewLandingPage(landingConfig)
+	if err != nil {
+		return err
+	}
+	http.Handle("/", landingpage)
 
 	srv := &http.Server{}
 	srvc := make(chan error)

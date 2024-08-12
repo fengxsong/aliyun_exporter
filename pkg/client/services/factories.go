@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/go-kit/log"
@@ -20,6 +21,7 @@ func Names() []string {
 	for k := range factories {
 		names = append(names, k)
 	}
+	sort.Strings(names)
 	return names
 }
 

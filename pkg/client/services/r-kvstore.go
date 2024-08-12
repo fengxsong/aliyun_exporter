@@ -15,11 +15,13 @@ type redisClient struct {
 
 func (c *redisClient) Collect(namespace string, ch chan<- prometheus.Metric) error {
 	if c.desc == nil {
-		c.desc = newDescOfInstnaceInfo(namespace, "redis", []string{"regionId", "instanceId", "name", "connectionDomain", "address", "status"})
+		c.desc = newDescOfInstnaceInfo(namespace, "acs_kvstore", []string{"regionId", "instanceId", "name", "connectionDomain", "address", "status"})
 	}
 	req := r_kvstore.CreateDescribeInstancesRequest()
 	req.PageSize = requests.NewInteger(pageSize)
 	resultChan := make(chan *result, 1<<10)
+	var totalCount int
+
 	go func() {
 		defer close(resultChan)
 		for hasNextPage, pageNum := true, 1; hasNextPage != false; pageNum++ {
@@ -29,7 +31,8 @@ func (c *redisClient) Collect(namespace string, ch chan<- prometheus.Metric) err
 				resultChan <- &result{err: err}
 				return
 			}
-			if len(response.Instances.KVStoreInstance) < pageSize {
+			totalCount += len(response.Instances.KVStoreInstance)
+			if totalCount >= response.TotalCount {
 				hasNextPage = false
 			}
 			for i := range response.Instances.KVStoreInstance {
@@ -50,7 +53,7 @@ func (c *redisClient) Collect(namespace string, ch chan<- prometheus.Metric) err
 }
 
 func init() {
-	register("redis", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
+	register("acs_kvstore", func(s1, s2, s3 string, l log.Logger) (Collector, error) {
 		client, err := r_kvstore.NewClientWithAccessKey(s1, s2, s3)
 		if err != nil {
 			return nil, err
