@@ -101,7 +101,10 @@ func (o *serveOption) run(_ *kingpin.ParseContext) error {
 		prometheus.MustRegister(iic)
 	}
 
-	http.Handle(o.metricsPath, promhttp.Handler())
+	http.Handle(o.metricsPath, promhttp.InstrumentMetricHandler(
+		prometheus.DefaultRegisterer,
+		promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{MaxRequestsInFlight: 1}),
+	))
 
 	healthzPath := "/-/healthy"
 	http.HandleFunc(healthzPath, func(w http.ResponseWriter, r *http.Request) {

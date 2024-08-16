@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Config exporter config
@@ -17,15 +17,24 @@ type Config struct {
 	InstanceTypes   []string             `yaml:"instance_types"`   // enable scraping instance infos for label join
 }
 
-func (c *Config) setDefaults() {
+func (c *Config) validateAndSetDefaults() error {
 	if c.Region == "" {
 		c.Region = "cn-hangzhou"
 	}
+	ak := getEnvOrDefault("ALIBABA_CLOUD_ACCESS_KEY", c.AccessKey)
+	secret := getEnvOrDefault("ALIBABA_CLOUD_ACCESS_KEY_SECRET", c.AccessKeySecret)
+	if len(ak) == 0 || len(secret) == 0 {
+		return errors.New("credentials not provide")
+	}
+	c.AccessKey = ak
+	c.AccessKeySecret = secret
+
 	for _, metrics := range c.Metrics {
 		for i := range metrics {
 			metrics[i].setDefaults()
 		}
 	}
+	return nil
 }
 
 // Parse parse config from file
@@ -38,12 +47,10 @@ func Parse(path string) (*Config, error) {
 	if err = yaml.Unmarshal(b, &cfg); err != nil {
 		return nil, err
 	}
-	ak := getEnvOrDefault("ALIBABA_CLOUD_ACCESS_KEY", cfg.AccessKey)
-	secret := getEnvOrDefault("ALIBABA_CLOUD_ACCESS_KEY_SECRET", cfg.AccessKeySecret)
-	if len(ak) == 0 || len(secret) == 0 {
-		return nil, errors.New("credentials not provide")
+	if err = cfg.validateAndSetDefaults(); err != nil {
+		return nil, err
 	}
-	cfg.setDefaults()
+
 	return &cfg, nil
 }
 

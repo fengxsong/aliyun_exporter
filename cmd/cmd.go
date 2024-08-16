@@ -8,7 +8,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/common/promlog"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/fengxsong/aliyun_exporter/pkg/client"
 	"github.com/fengxsong/aliyun_exporter/pkg/ratelimit"
@@ -102,7 +102,9 @@ func (o *generateExampleConfigOption) run(_ *kingpin.ParseContext) error {
 			return err
 		}
 	}
-	if err = yaml.NewEncoder(writer).Encode(&cfg); err != nil {
+	encoder := yaml.NewEncoder(writer)
+	encoder.SetIndent(2)
+	if err = encoder.Encode(&cfg); err != nil {
 		return err
 	}
 	level.Info(logger).Log("msg", "example configurations have been successfully generated, please modify the corresponding 'period'/'measure'/'instance_types' fields before running.")

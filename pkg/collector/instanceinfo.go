@@ -50,14 +50,14 @@ func (c *instanceInfoCollector) Collect(ch chan<- prometheus.Metric) {
 			start := time.Now()
 			defer func() {
 				wg.Done()
-				scrapeDuration.WithLabelValues(sub, "instanceinfo").Observe(time.Since(start).Seconds())
+				scrapeDuration.WithLabelValues(sub, "InstanceInfo").Observe(time.Since(start).Seconds())
 			}()
 			if err := c.client.Collect(c.namespace, sub, ch); err != nil {
 				level.Error(c.logger).Log("err", err, "instancetype", sub)
-				scrapeTotal.WithLabelValues(sub, "instanceinfo", "failed").Inc()
+				scrapeTotal.WithLabelValues(sub, "InstanceInfo", "failed").Inc()
 				return
 			}
-			scrapeTotal.WithLabelValues(sub, "instanceinfo", "success").Inc()
+			scrapeTotal.WithLabelValues(sub, "InstanceInfo", "success").Inc()
 		}(c.cfg.InstanceTypes[i])
 	}
 	wg.Wait()
