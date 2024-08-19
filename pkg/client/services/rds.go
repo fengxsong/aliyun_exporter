@@ -17,7 +17,7 @@ type rdsClient struct {
 func (c *rdsClient) Collect(namespace string, ch chan<- prometheus.Metric) error {
 	if c.desc == nil {
 		c.desc = newDescOfInstnaceInfo(namespace, "acs_rds_dashboard",
-			[]string{"regionId", "dbInstanceId", "name", "dbType", "desc", "status"})
+			[]string{"regionId", "dbInstanceId", "name", "dbType", "desc", "status", "connection"})
 	}
 	req := rds.CreateDescribeDBInstancesRequest()
 	req.PageSize = requests.NewInteger(pageSize)
@@ -49,7 +49,7 @@ func (c *rdsClient) Collect(namespace string, ch chan<- prometheus.Metric) error
 		}
 		ins := res.v.(rds.DBInstance)
 		ch <- prometheus.MustNewConstMetric(c.desc, prometheus.GaugeValue, 1.0,
-			ins.RegionId, ins.DBInstanceId, ins.DBInstanceName, ins.DBInstanceType, ins.DBInstanceDescription, ins.DBInstanceStatus)
+			ins.RegionId, ins.DBInstanceId, ins.DBInstanceName, ins.DBInstanceType, ins.DBInstanceDescription, ins.DBInstanceStatus, ins.ConnectionString)
 	}
 	return nil
 }

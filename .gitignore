@@ -23,7 +23,6 @@ bin
 *.swo
 *~
 
-example.yaml
 build/_output
 vendor/
 .vscode/%

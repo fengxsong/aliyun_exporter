@@ -1,0 +1,509 @@
+access_key: <changeme>
+access_key_secret: <changeme>
+region: cn-shenzhen
+metrics:
+  acs_kvstore:
+    - name: ConnectionUsage
+      period: 60,300
+      desc: 已用连接数百分比
+      dimensions:
+        - userId
+        - instanceId
+      unit: "%"
+      measure: Average,Minimum,Maximum
+    - name: CpuUsage
+      period: 60,300
+      desc: 已用CPU百分比
+      dimensions:
+        - userId
+        - instanceId
+      unit: "%"
+      measure: Average,Minimum,Maximum
+    - name: IntranetIn
+      period: 60,300
+      desc: 写入网络带宽
+      dimensions:
+        - userId
+        - instanceId
+      unit: B/s
+      measure: Average,Minimum,Maximum
+    - name: IntranetOut
+      period: 60,300
+      desc: 读取网络带宽
+      dimensions:
+        - userId
+        - instanceId
+      unit: B/s
+      measure: Average,Minimum,Maximum
+    - name: MemoryUsage
+      period: 60,300
+      desc: 已用容量百分比
+      dimensions:
+        - userId
+        - instanceId
+      unit: "%"
+      measure: Average,Minimum,Maximum
+    - name: ShardingAvgRt
+      period: 60,300
+      desc: 平均响应时间
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: us
+      measure: Average,Maximum
+    - name: ShardingBlockedClients
+      period: 60,300
+      desc: 执行block命令后暂时挂起的客户端数量
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: count
+      measure: Average,Maximum
+    - name: ShardingConnectionUsage
+      period: 60,300
+      desc: 连接数使用率
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: "%"
+      measure: Average,Maximum
+    - name: ShardingCpuUsage
+      period: 60,300
+      desc: CPU使用率
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: "%"
+      measure: Average,Maximum
+    - name: ShardingGetQps
+      period: 60,300
+      desc: 读QPS
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum
+    - name: ShardingHitRate
+      period: 60,300
+      desc: 命中率
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: "%"
+      measure: Average,Maximum
+    - name: ShardingKeys
+      period: 60,300
+      desc: 缓存内 Key 数量
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: count
+      measure: Average,Maximum
+    - name: ShardingPutQps
+      period: 60,300
+      desc: 写QPS
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum
+    - name: ShardingSlowlogCount
+      period: 60,300
+      desc: 慢查询数量
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: count
+      measure: Average,Maximum
+    - name: ShardingUsedConnection
+      period: 60,300
+      desc: 已用连接数
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: count
+      measure: Average,Maximum
+    - name: ShardingUsedMemoryLua
+      period: 60,300
+      desc: Lua脚本使用内存量
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: B
+      measure: Average,Maximum
+    - name: ShardingUsedQPS
+      period: 60,300
+      desc: 平均每秒访问次数
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: count
+      measure: Average,Maximum
+    - name: SplitrwProxyMaxRequestSize
+      period: 60,300
+      desc: Proxy单个请求最大字节数
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: B
+      measure: Average,Maximum
+    - name: SplitrwProxyMaxResponseSize
+      period: 60,300
+      desc: Proxy单个响应的最大字节数
+      dimensions:
+        - userId
+        - instanceId
+        - nodeId
+      unit: B
+      measure: Average,Maximum
+  acs_rds_dashboard:
+    - name: ConnectionUsage
+      period: 60,300
+      desc: 连接数使用率
+      dimensions:
+        - userId
+        - instanceId
+      unit: "%"
+      measure: Average,Minimum,Maximum
+    - name: CpuUsage
+      period: 60,300
+      desc: CPU使用率
+      dimensions:
+        - userId
+        - instanceId
+      unit: "%"
+      measure: Average,Minimum,Maximum
+    - name: DiskUsage
+      period: 60,300
+      desc: 磁盘使用率
+      dimensions:
+        - userId
+        - instanceId
+      unit: "%"
+      measure: Average,Minimum,Maximum
+    - name: IOPSUsage
+      period: 60,300
+      desc: IOPS使用率
+      dimensions:
+        - userId
+        - instanceId
+      unit: "%"
+      measure: Average,Minimum,Maximum
+    - name: MemoryUsage
+      period: 60,300
+      desc: 内存使用率
+      dimensions:
+        - userId
+        - instanceId
+      unit: "%"
+      measure: Average,Minimum,Maximum
+    - name: MySQL_ActiveSessions
+      period: 60,300
+      desc: MySQL_ActiveSessions
+      dimensions:
+        - userId
+        - instanceId
+      unit: count
+      measure: Average,Minimum,Maximum
+    - name: MySQL_DataIOBytesPS
+      period: 60,300
+      desc: MySQL读写吞吐量
+      dimensions:
+        - userId
+        - instanceId
+      unit: B/s
+      measure: Average,Maximum,Minimum
+    - name: MySQL_InnoDBDataRead
+      period: 60,300
+      desc: MySQL_InnoDB每秒读取数据量
+      dimensions:
+        - userId
+        - instanceId
+      unit: KiB
+      measure: Average,Maximum,Minimum
+    - name: MySQL_InnoDBDataWritten
+      period: 60,300
+      desc: MySQL_InnoDB每秒写入数据量
+      dimensions:
+        - userId
+        - instanceId
+      unit: KiB
+      measure: Average,Maximum,Minimum
+    - name: MySQL_InnoDBRowDelete
+      period: 60,300
+      desc: MySQL_InnoDB每秒删除行数
+      dimensions:
+        - userId
+        - instanceId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: MySQL_MDLLockSession
+      period: 60,300
+      desc: MDL锁阻塞的连接数
+      dimensions:
+        - userId
+        - instanceId
+      unit: count
+      measure: Average,Maximum,Minimum
+    - name: MySQL_NetworkInNew
+      period: 60,300
+      desc: MySQL网络流入带宽
+      dimensions:
+        - userId
+        - instanceId
+      unit: bit/s
+      measure: Average,Minimum,Maximum
+    - name: MySQL_NetworkOutNew
+      period: 60,300
+      desc: MySQL网络流出带宽
+      dimensions:
+        - userId
+        - instanceId
+      unit: bit/s
+      measure: Average,Minimum,Maximum
+    - name: MySQL_OpenFiles
+      period: 60,300
+      desc: 文件打开数
+      dimensions:
+        - userId
+        - instanceId
+      unit: count
+      measure: Average,Maximum,Minimum
+    - name: MySQL_QPS
+      period: 60,300
+      desc: MySQL每秒查询量
+      dimensions:
+        - userId
+        - instanceId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: MySQL_SlaveIORunning
+      period: 60,300
+      desc: 只读实例IO线程状态
+      dimensions:
+        - userId
+        - instanceId
+      unit: value
+      measure: Average,Maximum,Minimum
+    - name: MySQL_SlaveSQLRunning
+      period: 60,300
+      desc: 只读实例SQL线程状态
+      dimensions:
+        - userId
+        - instanceId
+      unit: value
+      measure: Average,Maximum,Minimum
+    - name: MySQL_SlowQueries
+      period: 60,300
+      desc: MySQL每秒慢查询量
+      dimensions:
+        - userId
+        - instanceId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: MySQL_StandbySyncLag
+      period: 60,300
+      desc: 主实例备库同步延迟
+      dimensions:
+        - userId
+        - instanceId
+      unit: s
+      measure: Average,Maximum,Minimum
+    - name: MySQL_TPS
+      period: 60,300
+      desc: MySQL每秒事务数
+      dimensions:
+        - userId
+        - instanceId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: MySQL_ThreadsConnected
+      period: 60,300
+      desc: MySQL_线程连接数
+      dimensions:
+        - userId
+        - instanceId
+      unit: count
+      measure: Average,Maximum,Minimum
+    - name: MySQL_ThreadsRunning
+      period: 60,300
+      desc: MySQL_活跃线程数
+      dimensions:
+        - userId
+        - instanceId
+      unit: count
+      measure: Average,Maximum,Minimum
+    - name: MySQL_TmpDiskSize
+      period: 60,300
+      desc: MySQL_临时磁盘使用量
+      dimensions:
+        - userId
+        - instanceId
+      unit: MiB
+      measure: Average,Maximum,Minimum
+    - name: MySQL_TotalSessions
+      period: 60,300
+      desc: 所有会话连接
+      dimensions:
+        - userId
+        - instanceId
+      unit: count
+      measure: Average,Maximum,Minimum
+  acs_slb_dashboard:
+    - name: ActiveConnection
+      period: 60,300
+      desc: 监听每秒活跃连接数
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: count
+      measure: Average,Minimum,Maximum
+    - name: DropConnection
+      period: 60,300
+      desc: 监听每秒丢失连接数
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: count/s
+      measure: Average,Minimum,Maximum
+    - name: HeathyServerCount
+      period: 60,300
+      desc: 健康检查后端健康ECS实例个数
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - vip
+      unit: count
+      measure: Average,Minimum,Maximum
+    - name: InactiveConnection
+      period: 60,300
+      desc: 监听非活跃连接数
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: count
+      measure: Average,Minimum,Maximum
+    - name: MaxConnection
+      period: 60,300
+      desc: 监听每秒最大连接数
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: count/s
+      measure: Maximum,Minimum,Average
+    - name: Qps
+      period: 60,300
+      desc: 七层监听QPS
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: Rt
+      period: 60,300
+      desc: 七层监听RT
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: ms
+      measure: Average
+    - name: StatusCode4xx
+      period: 60,300
+      desc: 七层监听每秒状态码4XX数量
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: count/s
+      measure: Average
+    - name: StatusCode5xx
+      period: 60,300
+      desc: 七层监听每秒状态码5XX数量
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: count/s
+      measure: Average
+    - name: DropTrafficTX
+      period: 60,300
+      desc: 监听每秒丢失出bit数
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: bit/s
+      measure: Average,Minimum,Maximum
+    - name: DropTrafficRX
+      period: 60,300
+      desc: 监听每秒丢失入bit数
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: bit/s
+      measure: Average,Minimum,Maximum
+    - name: TrafficRXNew
+      period: 60,300
+      desc: 监听流入带宽
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: bit/s
+      measure: Average,Minimum,Maximum
+    - name: TrafficTXNew
+      period: 60,300
+      desc: 监听流出带宽
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - protocol
+      unit: bit/s
+      measure: Average,Minimum,Maximum
+    - name: UnhealthyServerCount
+      period: 60,300
+      desc: 健康检查后端异常ECS实例个数
+      dimensions:
+        - userId
+        - instanceId
+        - port
+        - vip
+      unit: count
+      measure: Average,Minimum,Maximum
+instance_types:
+  - acs_kvstore
+  - acs_rds_dashboard
+  - acs_slb_dashboard
