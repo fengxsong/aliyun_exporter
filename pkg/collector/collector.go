@@ -22,12 +22,12 @@ var (
 		Namespace: app,
 		Name:      "scrape_duration_seconds",
 		Help:      "Duration of each metrics scraping"},
-		[]string{"namespace", "collector"})
+		[]string{"namespace", "collector", "region"})
 	scrapeTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: app,
 		Name:      "scrape_total",
 		Help:      "Total scrape counts",
-	}, []string{"namespace", "collector", "state"})
+	}, []string{"namespace", "collector", "region", "state"})
 )
 
 func init() {
@@ -75,15 +75,15 @@ func (m *cloudMonitor) Collect(ch chan<- prometheus.Metric) {
 			go func(namespace string, metric *config.Metric) {
 				start := time.Now()
 				defer func() {
-					scrapeDuration.WithLabelValues(namespace, metric.String()).Observe(time.Since(start).Seconds())
+					scrapeDuration.WithLabelValues(namespace, metric.String(), m.cfg.Region).Observe(time.Since(start).Seconds())
 					wg.Done()
 				}()
 				if err := m.client.Collect(m.namespace, namespace, metric, ch); err != nil {
 					level.Error(m.logger).Log("err", err, "sub", namespace, "metric", metric.String())
-					scrapeTotal.WithLabelValues(namespace, metric.String(), "failed").Inc()
+					scrapeTotal.WithLabelValues(namespace, metric.String(), m.cfg.Region, "failed").Inc()
 					return
 				}
-				scrapeTotal.WithLabelValues(namespace, metric.String(), "success").Inc()
+				scrapeTotal.WithLabelValues(namespace, metric.String(), m.cfg.Region, "success").Inc()
 			}(sub, metrics[i])
 		}
 	}

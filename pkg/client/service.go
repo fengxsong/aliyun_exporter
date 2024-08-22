@@ -15,8 +15,9 @@ type ServiceClient struct {
 }
 
 // Collect do actural collection
-func (c *ServiceClient) Collect(namespace string, sub string, ch chan<- prometheus.Metric) error {
-	collector, ok := c.collectors[sub]
+func (c *ServiceClient) Collect(namespace string, sub string, region string, ch chan<- prometheus.Metric) error {
+	key := sub + region
+	collector, ok := c.collectors[key]
 	if !ok {
 		return nil
 	}
@@ -24,7 +25,7 @@ func (c *ServiceClient) Collect(namespace string, sub string, ch chan<- promethe
 }
 
 // NewServiceClient create service client
-func NewServiceClient(ak, secret, region string, rt http.RoundTripper, logger log.Logger) (*ServiceClient, error) {
+func NewServiceClient(ak, secret string, regions []string, rt http.RoundTripper, logger log.Logger) (*ServiceClient, error) {
 	sc := &ServiceClient{
 		collectors: make(map[string]services.Collector),
 	}
@@ -32,16 +33,18 @@ func NewServiceClient(ak, secret, region string, rt http.RoundTripper, logger lo
 		logger = log.NewNopLogger()
 	}
 	for name, fn := range services.All() {
-		collector, err := fn(region, ak, secret, logger)
-		if err != nil {
-			return nil, err
+		for i := range regions {
+			collector, err := fn(regions[i], ak, secret, logger)
+			if err != nil {
+				return nil, err
+			}
+			if client, ok := collector.(interface {
+				SetTransport(http.RoundTripper)
+			}); ok {
+				client.SetTransport(rt)
+			}
+			sc.collectors[name+regions[i]] = collector
 		}
-		if client, ok := collector.(interface {
-			SetTransport(http.RoundTripper)
-		}); ok {
-			client.SetTransport(rt)
-		}
-		sc.collectors[name] = collector
 	}
 	return sc, nil
 }

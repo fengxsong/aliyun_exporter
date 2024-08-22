@@ -92,8 +92,11 @@ func (o *serveOption) run(_ *kingpin.ParseContext) error {
 	}
 	prometheus.MustRegister(cmc)
 
-	if len(cfg.InstanceTypes) > 0 {
-		level.Info(logger).Log("msg", "enabling instance info collectors for lable joining", "collectors", strings.Join(cfg.InstanceTypes, ", "))
+	if cfg.InstanceInfo != nil {
+		level.Info(logger).Log("msg", "enabling instance info collectors for lable joining",
+			"collectors", strings.Join(cfg.InstanceInfo.Types, ", "),
+			"regions", strings.Join(cfg.InstanceInfo.Regions, ", "),
+		)
 		iic, err := collector.NewInstanceInfoCollector("cloudmonitor", cfg, rt, logger)
 		if err != nil {
 			return err

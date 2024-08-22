@@ -14,7 +14,12 @@ type Config struct {
 	Region          string               `yaml:"region"`
 	Labels          map[string]string    `yaml:"labels,omitempty"` // todo: add extra labels
 	Metrics         map[string][]*Metric `yaml:"metrics"`          // mapping for namespace and metrics
-	InstanceTypes   []string             `yaml:"instance_types"`   // enable scraping instance infos for label join
+	InstanceInfo    *InstanceInfo        `yaml:"instance_info"`    // enable scraping instance infos for label join
+}
+
+type InstanceInfo struct {
+	Types   []string `yaml:"types"`
+	Regions []string `yaml:"regions"`
 }
 
 func (c *Config) validateAndSetDefaults() error {
@@ -28,7 +33,9 @@ func (c *Config) validateAndSetDefaults() error {
 	}
 	c.AccessKey = ak
 	c.AccessKeySecret = secret
-
+	if c.InstanceInfo != nil && len(c.InstanceInfo.Regions) == 0 {
+		c.InstanceInfo.Regions = []string{c.Region}
+	}
 	for _, metrics := range c.Metrics {
 		for i := range metrics {
 			metrics[i].setDefaults()

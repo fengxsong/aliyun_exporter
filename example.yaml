@@ -503,7 +503,349 @@ metrics:
         - vip
       unit: count
       measure: Average,Minimum,Maximum
-instance_types:
-  - acs_kvstore
-  - acs_rds_dashboard
-  - acs_slb_dashboard
+  acs_polardb:
+    - name: cluster_active_sessions
+      period: 60,300
+      desc: 活跃连接数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count
+      measure: Average
+    - name: cluster_blktag_utilization
+      period: 60,300
+      desc: blktag使用率
+      dimensions:
+        - userId
+        - clusterId
+      unit: "%"
+      measure: Average
+    - name: cluster_com_delete
+      period: 60,300
+      desc: 每秒Delete语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_com_delete_multi
+      period: 60,300
+      desc: 每秒Multi-Delete语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_com_insert
+      period: 60,300
+      desc: 每秒Insert语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_com_insert_select
+      period: 60,300
+      desc: 每秒Insert-Select语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_com_replace
+      period: 60,300
+      desc: 每秒Replace语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_com_replace_select
+      period: 60,300
+      desc: 每秒Replace-Select语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_com_select
+      period: 60,300
+      desc: 每秒Select语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_com_update
+      period: 60,300
+      desc: 每秒Update语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_com_update_multi
+      period: 60,300
+      desc: 每秒Multi-Update语句执行次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_connection_utilization
+      period: 60,300
+      desc: 连接数使用率
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: "%"
+      measure: Average,Maximum,Minimum
+    - name: cluster_cpu_utilization
+      period: 60,300
+      desc: CPU使用率
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: "%"
+      measure: Average
+    - name: cluster_data_io
+      period: 60,300
+      desc: 每秒存储引擎IO吞吐量
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: KiB
+      measure: Average
+    - name: cluster_data_iops
+      period: 60,300
+      desc: 每秒存储引擎IO次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average
+    - name: cluster_direntry_utilization
+      period: 60,300
+      desc: direntry使用率
+      dimensions:
+        - userId
+        - clusterId
+      unit: "%"
+      measure: Average
+    - name: cluster_disk_utilization
+      period: 60,300
+      desc: 磁盘使用率
+      dimensions:
+        - userId
+        - clusterId
+      unit: "%"
+      measure: Average
+    - name: cluster_innodb_buffer_dirty_ratio
+      period: 60,300
+      desc: 缓冲池脏块率
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: "%"
+      measure: Average,Maximum,Minimum
+    - name: cluster_innodb_buffer_read_hit_rate
+      period: 60,300
+      desc: 缓冲池的读命中率
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: "%"
+      measure: Average,Maximum,Minimum
+    - name: cluster_inode_utilization
+      period: 60,300
+      desc: inode使用率
+      dimensions:
+        - userId
+        - clusterId
+      unit: "%"
+      measure: Average
+    - name: cluster_input_traffic
+      period: 60,300
+      desc: 每秒网络输入流量
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: KiB/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_iops
+      period: 60,300
+      desc: 每秒IO次数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average
+    - name: cluster_iops_usage
+      period: 60,300
+      desc: IOPS使用率
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: "%"
+      measure: Average,Maximum,Minimum
+    - name: cluster_mdl_lock_session
+      period: 60,300
+      desc: MDL锁阻塞的连接数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count
+      measure: Average,Maximum,Minimum
+    - name: cluster_mem_hit_ratio
+      period: 60,300
+      desc: 内存命中率
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: "%"
+      measure: Average
+    - name: cluster_memory_utilization
+      period: 60,300
+      desc: 内存使用率
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: "%"
+      measure: Average
+    - name: cluster_mps
+      period: 60,300
+      desc: 每秒数据操作数
+      dimensions:
+        - userId
+        - clusterId
+        - instanceId
+      unit: count/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_other_lock_session
+      period: 60,300
+      desc: 其它锁阻塞的连接数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count
+      measure: Average,Maximum,Minimum
+    - name: cluster_output_traffic
+      period: 60,300
+      desc: 每秒网络输出流量
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: KiB/s
+      measure: Average,Maximum,Minimum
+    - name: cluster_pcu_by_cpu_cores
+      period: 60,300
+      desc: PolarDB Serverless 集群进行资源弹性的管理单位，单次弹性的最小 PCU 单位为0.5 PCU
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: core
+      measure: Average,Maximum,Minimum
+    - name: cluster_prepared_stmt_count
+      period: 60,300
+      desc: Prepared Statement 数量
+      dimensions:
+        - userId
+        - clusterId
+      unit: count
+      measure: Average,Maximum,Minimum
+    - name: cluster_prepared_stmt_utilization
+      period: 60,300
+      desc: Prepared Statement 使用率
+      dimensions:
+        - userId
+        - clusterId
+      unit: "%"
+      measure: Average,Maximum,Minimum
+    - name: cluster_qps
+      period: 60,300
+      desc: 每秒查询数量
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count
+      measure: Average
+    - name: cluster_redo_write_rate
+      period: 60,300
+      desc: redo日志写入速率
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: B/s
+      measure: Average
+    - name: cluster_replica_lag
+      period: 60,300
+      desc: 只读节点复制延迟
+      dimensions:
+        - userId
+        - clusterId
+        - instanceId
+      unit: s
+      measure: Average,Maximum,Minimum
+    - name: cluster_slow_queries_ps
+      period: 60,300
+      desc: 每秒慢查询数量
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average
+    - name: cluster_total_session
+      period: 60,300
+      desc: 当前总连接数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count
+      measure: Average,Maximum,Minimum
+    - name: cluster_tps
+      period: 60,300
+      desc: 每秒事务数
+      dimensions:
+        - userId
+        - clusterId
+        - nodeId
+      unit: count/s
+      measure: Average
+instance_info:
+  types:
+    - acs_kvstore
+    - acs_rds_dashboard
+    - acs_slb_dashboard
+    - acs_polardb
+  regions:
+    - ap-southeast-1
+    - cn-shenzhen

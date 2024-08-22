@@ -26,7 +26,7 @@ func NewInstanceInfoCollector(namespace string, cfg *config.Config, rt http.Roun
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
-	cli, err := client.NewServiceClient(cfg.AccessKey, cfg.AccessKeySecret, cfg.Region, rt, logger)
+	cli, err := client.NewServiceClient(cfg.AccessKey, cfg.AccessKeySecret, cfg.InstanceInfo.Regions, rt, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -44,21 +44,23 @@ func (c *instanceInfoCollector) Collect(ch chan<- prometheus.Metric) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	wg := &sync.WaitGroup{}
-	for i := range c.cfg.InstanceTypes {
-		wg.Add(1)
-		go func(sub string) {
-			start := time.Now()
-			defer func() {
-				wg.Done()
-				scrapeDuration.WithLabelValues(sub, "InstanceInfo").Observe(time.Since(start).Seconds())
-			}()
-			if err := c.client.Collect(c.namespace, sub, ch); err != nil {
-				level.Error(c.logger).Log("err", err, "instancetype", sub)
-				scrapeTotal.WithLabelValues(sub, "InstanceInfo", "failed").Inc()
-				return
-			}
-			scrapeTotal.WithLabelValues(sub, "InstanceInfo", "success").Inc()
-		}(c.cfg.InstanceTypes[i])
+	for i := range c.cfg.InstanceInfo.Types {
+		for j := range c.cfg.InstanceInfo.Regions {
+			wg.Add(1)
+			go func(sub string, region string) {
+				start := time.Now()
+				defer func() {
+					wg.Done()
+					scrapeDuration.WithLabelValues(sub, "InstanceInfo", region).Observe(time.Since(start).Seconds())
+				}()
+				if err := c.client.Collect(c.namespace, sub, region, ch); err != nil {
+					level.Error(c.logger).Log("err", err, "instancetype", sub)
+					scrapeTotal.WithLabelValues(sub, "InstanceInfo", region, "failed").Inc()
+					return
+				}
+				scrapeTotal.WithLabelValues(sub, "InstanceInfo", region, "success").Inc()
+			}(c.cfg.InstanceInfo.Types[i], c.cfg.InstanceInfo.Regions[j])
+		}
 	}
 	wg.Wait()
 }
