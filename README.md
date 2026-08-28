@@ -1,3 +1,5 @@
+
+
 # Aliyun Exporter
 
 a prometheus exporter for Aliyun CloudMonitor service. Written in Golang, inspired by [aliyun_exporter](https://github.com/aylei/aliyun_exporter).
@@ -15,7 +17,7 @@ make tidy
 ```bash
 make bin
 # generate example of config
-./build/_output/bin/aliyun_exporter generate-example-config --accesskey xxxx ----accesskeysecret xxxx
+./build/_output/bin/aliyun_exporter generate-example-config --accesskey xxxx --accesskeysecret xxxx
 # run http metrics handler
 ./build/_output/bin/aliyun_exporter serve [--config=/path/of/config]
 ```
