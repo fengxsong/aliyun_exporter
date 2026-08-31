@@ -15,7 +15,7 @@ make tidy
 ```bash
 make bin
 # generate example of config
-./build/_output/bin/aliyun_exporter generate-example-config --accesskey xxxx ----accesskeysecret xxxx
+./build/_output/bin/aliyun_exporter generate-example-config --accesskey xxxx --accesskeysecret xxxx
 # run http metrics handler
 ./build/_output/bin/aliyun_exporter serve [--config=/path/of/config]
 ```
